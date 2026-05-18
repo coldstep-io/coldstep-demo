@@ -14,4 +14,4 @@ jobs:
           report: step-summary
 
       - name: Install Jekyll
-        run: gem install jekyll
+        run: sudo gem install jekyll
