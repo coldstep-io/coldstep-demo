@@ -1,0 +1,18 @@
+name: "Demo: defend mode — npm allowlisted"
+on:
+  workflow_dispatch:
+
+jobs:
+  defend-demo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: coldstep-io/coldstep@v0.2.4
+        with:
+          mode: defend
+          allow: |
+            registry.npmjs.org
+            cdn.npmjs.com
+          report: step-summary
+
+      - name: Install express (allowlisted hosts only)
+        run: npm install express

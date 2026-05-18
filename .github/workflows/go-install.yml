@@ -1,0 +1,17 @@
+name: "Demo: go install"
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 9 * * 1'
+
+jobs:
+  go-demo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: coldstep-io/coldstep@v0.2.4
+        with:
+          mode: detect
+          report: step-summary
+
+      - name: Install gopls via go install
+        run: go install golang.org/x/tools/gopls@latest

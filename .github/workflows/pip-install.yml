@@ -1,0 +1,17 @@
+name: "Demo: pip install"
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 7 * * 1'
+
+jobs:
+  pip-demo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: coldstep-io/coldstep@v0.2.4
+        with:
+          mode: detect
+          report: step-summary
+
+      - name: Install data science stack
+        run: pip install pandas numpy scikit-learn matplotlib

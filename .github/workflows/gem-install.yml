@@ -1,0 +1,17 @@
+name: "Demo: gem install"
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 11 * * 1'
+
+jobs:
+  gem-demo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: coldstep-io/coldstep@v0.2.4
+        with:
+          mode: detect
+          report: step-summary
+
+      - name: Install Jekyll
+        run: gem install jekyll
