@@ -8,7 +8,7 @@ jobs:
   go-demo:
     runs-on: ubuntu-latest
     steps:
-      - uses: coldstep-io/coldstep@v0.2.4
+      - uses: coldstep-io/coldstep@v0.2.6
         with:
           mode: detect
           report: step-summary
