@@ -14,9 +14,10 @@ jobs:
       - name: Pin registry.npmjs.org IPv4 (avoid stub DNS once defend is running)
         run: |
           set -euo pipefail
-          ip=$(getent ahostsv4 registry.npmjs.org | awk '/STREAM/{print $1; exit}')
+          ip=$(python3 -c "import socket; print(socket.gethostbyname('registry.npmjs.org'))")
           test -n "${ip}"
           echo "${ip} registry.npmjs.org" | sudo tee -a /etc/hosts >/dev/null
+          echo "pinned registry.npmjs.org -> ${ip}"
 
       - uses: coldstep-io/coldstep@v0.2.6
         with:
