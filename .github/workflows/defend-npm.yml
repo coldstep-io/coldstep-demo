@@ -6,35 +6,19 @@ jobs:
   defend-demo:
     runs-on: ubuntu-latest
     steps:
-      # Pin registry.npmjs.org IPv4 in /etc/hosts BEFORE defend starts.
-      # Defend mode blocks the systemd-resolved stub at 127.0.0.53:53, so any
-      # subsequent getaddrinfo() (e.g. by npm) fails with EAI_AGAIN. The agent
-      # resolves the allowlist domain at start, so the pinned IP is also on the
-      # effective allowlist when npm connects.
-      - name: Pin registry.npmjs.org IPv4 (avoid stub DNS once defend is running)
-        run: |
-          set -euo pipefail
-          ip=""
-          for attempt in 1 2 3 4 5 6 7 8 9 10; do
-            if ip=$(python3 -c "import socket; print(socket.gethostbyname('registry.npmjs.org'))" 2>&1); then
-              if [[ -n "${ip}" && "${ip}" =~ ^[0-9.]+$ ]]; then
-                break
-              fi
-            fi
-            echo "DNS attempt ${attempt} failed: ${ip}"
-            ip=""
-            sleep 2
-          done
-          test -n "${ip}" || { echo "::error::failed to resolve registry.npmjs.org after retries"; exit 1; }
-          echo "${ip} registry.npmjs.org" | sudo tee -a /etc/hosts >/dev/null
-          echo "pinned registry.npmjs.org -> ${ip}"
-
       - uses: coldstep-io/coldstep@v0.2.6
         with:
           mode: defend
           allow: |
             registry.npmjs.org
             cdn.npmjs.com
+          # Allow loopback so npm's getaddrinfo() can reach the systemd-resolved
+          # stub at 127.0.0.53:53. Without this, defend's cgroup connect4 hook
+          # blocks the local DNS call and npm fails with EAI_AGAIN. The stub
+          # itself runs outside the job cgroup, so its upstream queries are
+          # unaffected. A pre-step pre-resolve does NOT work here because the
+          # action's node24 `pre:` hook fires at job setup, before any step.
+          ignored-nets: 127.0.0.0/8
           report: step-summary
 
       - name: Install express (allowlisted hosts only)
