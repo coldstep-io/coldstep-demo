@@ -14,8 +14,18 @@ jobs:
       - name: Pin registry.npmjs.org IPv4 (avoid stub DNS once defend is running)
         run: |
           set -euo pipefail
-          ip=$(python3 -c "import socket; print(socket.gethostbyname('registry.npmjs.org'))")
-          test -n "${ip}"
+          ip=""
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            if ip=$(python3 -c "import socket; print(socket.gethostbyname('registry.npmjs.org'))" 2>&1); then
+              if [[ -n "${ip}" && "${ip}" =~ ^[0-9.]+$ ]]; then
+                break
+              fi
+            fi
+            echo "DNS attempt ${attempt} failed: ${ip}"
+            ip=""
+            sleep 2
+          done
+          test -n "${ip}" || { echo "::error::failed to resolve registry.npmjs.org after retries"; exit 1; }
           echo "${ip} registry.npmjs.org" | sudo tee -a /etc/hosts >/dev/null
           echo "pinned registry.npmjs.org -> ${ip}"
 
