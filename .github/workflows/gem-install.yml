@@ -8,7 +8,7 @@ jobs:
   gem-demo:
     runs-on: ubuntu-latest
     steps:
-      - uses: coldstep-io/coldstep@v0.2.7
+      - uses: coldstep-io/coldstep@v0.2.8
         with:
           mode: detect
           report: step-summary
