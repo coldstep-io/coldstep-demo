@@ -4,7 +4,7 @@ See exactly what popular package managers phone home to — using [coldstep](htt
 
 Every workflow in this repo runs a single install command (`npm install`, `pip install`, `cargo install`, etc.) on a fresh `ubuntu-latest` runner with the **coldstep** eBPF agent attached in `detect` mode. The shutdown digest — every process spawned, every IPv4 destination contacted, every DNS lookup — is published to that run's **Step Summary**.
 
-Pinned to [`coldstep-io/coldstep@v0.3.0`](https://github.com/coldstep-io/coldstep/releases/tag/v0.3.0).
+Pinned to [`coldstep-io/coldstep@v0.4.0`](https://github.com/coldstep-io/coldstep/releases/tag/v0.4.0).
 
 ## The workflows
 
@@ -41,7 +41,7 @@ A typical detect-mode digest contains:
 ## Use coldstep in your own workflows
 
 ```yaml
-- uses: coldstep-io/coldstep@v0.3.0
+- uses: coldstep-io/coldstep@v0.4.0
   with:
     mode: detect
     report: step-summary
