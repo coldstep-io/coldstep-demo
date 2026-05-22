@@ -6,9 +6,12 @@ jobs:
   defend-demo:
     runs-on: ubuntu-latest
     steps:
-      - uses: coldstep-io/coldstep@v0.4.0
+      - id: coldstep
+        uses: coldstep-io/coldstep@v0.4.0
         with:
           mode: defend
+          detect-profile: enhanced
+          fail-on-error: true
           allow: |
             registry.npmjs.org
             cdn.npmjs.com
@@ -19,7 +22,43 @@ jobs:
           # unaffected. A pre-step pre-resolve does NOT work here because the
           # action's node24 `pre:` hook fires at job setup, before any step.
           ignored-nets: 127.0.0.0/8
-          report: step-summary
 
       - name: Install express (allowlisted hosts only)
+        id: npm-install
+        continue-on-error: true
         run: npm install express
+
+      - name: Report defend outcome
+        if: always()
+        env:
+          INSTALL_OUTCOME: ${{ steps.npm-install.outcome }}
+        run: |
+          {
+            echo '## Defend mode showcase'
+            echo ''
+            echo 'This workflow runs `npm install express` in **defend mode** with only `registry.npmjs.org` + `cdn.npmjs.com` allowed.'
+            echo 'In practice npm dials additional hosts (telemetry, mirror probes, transitively-fetched tarballs not under the allowed CDN), so the install is *expected to be blocked* somewhere — that is the showcase.'
+            echo ''
+            echo "**npm install outcome:** \`${INSTALL_OUTCOME}\`"
+            echo ''
+            if [ "${INSTALL_OUTCOME}" = "failure" ]; then
+              echo 'PASS — defend mode blocked at least one connection that was not on the allowlist, exactly as designed.'
+              echo 'Inspect `.coldstep-events.jsonl` (uploaded as an artifact) for the `deny` events with the destinations that were dropped.'
+            elif [ "${INSTALL_OUTCOME}" = "success" ]; then
+              echo 'NOTE — npm install completed without being blocked. Either every host it touched was on the allowlist, or the version of npm in this runner image happens to talk only to the registry. Check `.coldstep-events.jsonl` to confirm no `deny` events were generated.'
+            else
+              echo "NOTE — install step outcome was \`${INSTALL_OUTCOME}\`; see the step logs for context."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coldstep telemetry
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coldstep-${{ github.job }}-${{ github.run_id }}
+          path: |
+            .coldstep-events.jsonl
+            .coldstep-detect.md
+            .coldstep-telemetry.json
+          include-hidden-files: true
+          retention-days: 14
