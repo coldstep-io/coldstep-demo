@@ -8,12 +8,39 @@ jobs:
   apt-demo:
     runs-on: ubuntu-latest
     steps:
-      - uses: coldstep-io/coldstep@v0.4.0
+      - id: coldstep
+        uses: coldstep-io/coldstep@v0.4.0
         with:
           mode: detect
-          report: step-summary
+          detect-profile: enhanced
+          fail-on-error: true
 
       - name: Install ffmpeg
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg
+
+      - name: Suggested allowlist
+        if: always()
+        run: |
+          {
+            echo '## Suggested allowlist'
+            echo ''
+            echo 'Paste the lines below into the action `allow:` input to lock this workflow down in defend mode.'
+            echo ''
+            echo '```'
+            echo "${{ steps.coldstep.outputs.suggested-allow }}"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload coldstep telemetry
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coldstep-${{ github.job }}-${{ github.run_id }}
+          path: |
+            .coldstep-events.jsonl
+            .coldstep-detect.md
+            .coldstep-telemetry.json
+          include-hidden-files: true
+          retention-days: 14
