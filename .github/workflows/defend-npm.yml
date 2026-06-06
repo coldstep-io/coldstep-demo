@@ -10,7 +10,6 @@ jobs:
         uses: coldstep-io/coldstep@v0.4.1
         with:
           mode: defend
-          detect-profile: enhanced
           fail-on-error: true
           allow: |
             registry.npmjs.org
