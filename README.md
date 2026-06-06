@@ -32,19 +32,38 @@ A typical detect-mode digest contains:
 - **TLS SNI / HTTP host headers:** which logical hosts were addressed inside the TLS sessions.
 - **BPF program health:** load status of each probe, telling you the digest isn't blind.
 
+## Interpreting results
+
+**For detect mode:** Look at the Step Summary to see:
+- The process tree and egress destinations for that install
+- **Suggested allowlist** block — copy/paste those lines into `allow:` to lock down the same install in defend mode
+- Download the per-run artifact (under **Artifacts** in the run details) to get raw `.jsonl` events, the full `.md` digest, and telemetry for offline analysis
+
+**For defend mode:** The Step Summary's "Defend mode showcase" block reports the install outcome — `failure` means defend blocked a connection outside the allowlist (the expected showcase), `success` means everything the install touched was allowed. Either way, the `deny` events (if any) are in the artifact's `.coldstep-events.jsonl`.
+
 ## detect vs defend
 
 **`mode: detect`** (default) — observe-only. The agent records everything; nothing is blocked. Use this to *discover* what a build actually contacts before you write an allowlist.
 
 **`mode: defend`** — IPv4 egress not on the allowlist is blocked at the cgroup `connect4`/`sendmsg4` hook (plus BPF LSM where available). Use this once you know what the build legitimately needs. See [`defend-npm.yml`](.github/workflows/defend-npm.yml) for a minimal example that allows only the npm registry.
 
-## Use coldstep in your own workflows
+## Adapt these demos for your own repo
+
+Each workflow file is a standalone template — open one matching your package manager, copy it whole, and swap in your own install command. The minimal shape:
 
 ```yaml
 - uses: coldstep-io/coldstep@v0.4.1
   with:
     mode: detect
-    report: step-summary
+    detect-profile: enhanced
+    fail-on-error: true
+
+- name: Your build step
+  run: <your install/build command>
 ```
 
-Full input reference, defend-mode setup, IPv4 scope and limits, and the agent architecture are documented at **[coldstep-io/coldstep](https://github.com/coldstep-io/coldstep)**.
+Every demo also echoes the action's `suggested-allow` output into the Job Summary and uploads the raw telemetry files as artifacts — copy those steps verbatim from any [workflow file](.github/workflows).
+
+Once you know what the install legitimately contacts, switch to `mode: defend` and paste the suggested allowlist into the `allow:` input. See [`defend-npm.yml`](.github/workflows/defend-npm.yml) for an example.
+
+**Reference:** Full input reference, defend-mode setup, IPv4 scope and limits, and the agent architecture are documented at **[coldstep-io/coldstep](https://github.com/coldstep-io/coldstep)**.
