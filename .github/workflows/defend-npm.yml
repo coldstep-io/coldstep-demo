@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - id: coldstep
-        uses: coldstep-io/coldstep@v0.4.0
+        uses: coldstep-io/coldstep@v0.4.1
         with:
           mode: defend
           detect-profile: enhanced
