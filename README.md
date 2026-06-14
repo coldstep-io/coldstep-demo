@@ -6,6 +6,25 @@ Every workflow in this repo runs a single install command (`npm install`, `pip i
 
 Pinned to [`coldstep-io/coldstep@v0.4.1`](https://github.com/coldstep-io/coldstep/releases/tag/v0.4.1).
 
+## Run a demo on your laptop in one command
+
+```sh
+./run-demo.sh npm detect     # watch what `npm install` phones home
+./run-demo.sh npm defend     # watch defend mode block unauthorized egress
+```
+
+`run-demo.sh` runs the **exact** workflow from `.github/workflows/` locally — same
+coldstep eBPF agent, same bytes you'd get in CI — using [`act`](https://nektosact.com).
+Takes `npm|pip|cargo|go|apt|gem` and `detect|defend`. It needs Docker + `act`; no
+`act` on the host? Use the bundled privileged container instead:
+
+```sh
+docker compose run --rm coldstep-demo ./run-demo.sh npm detect
+```
+
+> Requires a Linux kernel with BTF + eBPF. Native Linux works directly; Docker
+> Desktop (macOS/Windows) and WSL2 ship a BTF-enabled kernel, so it works there too.
+
 ## The workflows
 
 | Workflow | What it installs | Latest runs |
