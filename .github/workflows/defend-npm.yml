@@ -93,14 +93,22 @@ jobs:
             echo 'The `deny` events (with the dropped destinations) are in `.coldstep-events.jsonl`, uploaded as an artifact.'
           } >> "$GITHUB_STEP_SUMMARY"
 
+      # In defend mode the agent writes its telemetry as root with restrictive
+      # perms, so the upload step (running as the runner user) can't read it.
+      # Relax the perms so the artifact uploads.
+      - name: Make coldstep telemetry readable
+        if: always()
+        run: sudo chmod -R a+r .coldstep-* 2>/dev/null || true
+
       - name: Upload coldstep telemetry
         if: always()
+        # Telemetry is a nice-to-have; never let an artifact hiccup turn a
+        # correct defend run red. The green/red signal is the assert step above.
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: coldstep-${{ github.job }}-${{ github.run_id }}
-          # Glob every coldstep output regardless of mode-specific filenames, and
-          # never fail the job over a missing artifact (defend mode does not write
-          # the same set of files as detect mode).
+          # Glob every coldstep output regardless of mode-specific filenames.
           path: |
             .coldstep-*.jsonl
             .coldstep-*.md
