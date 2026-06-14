@@ -1,10 +1,37 @@
 # coldstep-demo
 
-See exactly what popular package managers phone home to — using [coldstep](https://github.com/coldstep-io/coldstep).
+**See exactly what popular package managers phone home to — then block it.** Powered by
+[coldstep](https://github.com/coldstep-io/coldstep), an eBPF CI egress agent.
 
-Every workflow in this repo runs a single install command (`npm install`, `pip install`, `cargo install`, etc.) on a fresh `ubuntu-latest` runner with the **coldstep** eBPF agent attached in `detect` mode. The shutdown digest — every process spawned, every IPv4 destination contacted, every DNS lookup — is published to that run's **Step Summary**.
+![npm install in detect mode, then defend mode blocking unauthorized egress](demo-output/casts/npm-detect-vs-defend.svg)
 
-Pinned to [`coldstep-io/coldstep@v0.4.1`](https://github.com/coldstep-io/coldstep/releases/tag/v0.4.1).
+Every workflow here runs one install command (`npm install`, `pip install`, `cargo install`, …)
+on a fresh `ubuntu-latest` runner with the coldstep eBPF agent attached. The agent records
+every process spawned, every IPv4 destination contacted, every DNS lookup, and every TLS SNI —
+and the digest is **committed right here in the repo** so you can read it without opening a
+single CI log.
+
+## The bytes — real captured digests
+
+No "see the Actions tab", no expiring artifacts, no 404s. The actual output is in
+[`demo-output/`](demo-output/):
+
+| install | what it reaches out to | digest |
+| :------ | :--------------------- | :----- |
+| `npm install express @aws-sdk/client-s3` | `registry.npmjs.org` + GitHub Actions infra + Azure metadata | [npm.md](demo-output/v0.4.1/npm.md) |
+| `pip install pandas numpy scikit-learn matplotlib` | `pypi.org`, `files.pythonhosted.org` | [pip.md](demo-output/v0.4.1/pip.md) |
+| `cargo install ripgrep` | `static.crates.io`, `index.crates.io` | [cargo.md](demo-output/v0.4.1/cargo.md) |
+| `go install …/gopls@latest` | `proxy.golang.org`, `sum.golang.org`, `storage.googleapis.com` | [go.md](demo-output/v0.4.1/go.md) |
+| `apt-get install ffmpeg` | the Azure apt mirror, via `https`/`gpgv`/`apt-key` | [apt.md](demo-output/v0.4.1/apt.md) |
+| `gem install jekyll` | `index.rubygems.org` (Fastly edge) | [gem.md](demo-output/v0.4.1/gem.md) |
+| `npm install` in **defend** mode | registry allowed ✔, `1.1.1.1` dropped ✗ | [defend-npm.md](demo-output/v0.4.1/defend-npm.md) |
+
+Each digest links back to the exact run that produced it. There's an asciinema replay too:
+[`demo-output/casts/`](demo-output/casts/) (`asciinema play demo-output/casts/npm-detect-vs-defend.cast`).
+
+> Pinned to [`coldstep-io/coldstep@v0.4.1`](https://github.com/coldstep-io/coldstep/releases/tag/v0.4.1).
+> The digests above are summarized from each run's raw `.coldstep-events.jsonl` — see
+> [demo-output/README.md](demo-output/README.md) for exactly how, and why.
 
 ## Run a demo on your laptop in one command
 
@@ -13,62 +40,59 @@ Pinned to [`coldstep-io/coldstep@v0.4.1`](https://github.com/coldstep-io/coldste
 ./run-demo.sh npm defend     # watch defend mode block unauthorized egress
 ```
 
-`run-demo.sh` runs the **exact** workflow from `.github/workflows/` locally — same
-coldstep eBPF agent, same bytes you'd get in CI — using [`act`](https://nektosact.com).
-Takes `npm|pip|cargo|go|apt|gem` and `detect|defend`. It needs Docker + `act`; no
-`act` on the host? Use the bundled privileged container instead:
+`run-demo.sh` runs the **exact** workflow from `.github/workflows/` locally — same coldstep
+eBPF agent, same bytes you'd get in CI — using [`act`](https://nektosact.com). It takes any of
+`npm|pip|cargo|go|apt|gem` and `detect|defend`. No `act` on the host? Use the bundled container:
 
 ```sh
 docker compose run --rm coldstep-demo ./run-demo.sh npm detect
 ```
 
-> Requires a Linux kernel with BTF + eBPF. Native Linux works directly; Docker
-> Desktop (macOS/Windows) and WSL2 ship a BTF-enabled kernel, so it works there too.
-
-## The workflows
-
-| Workflow | What it installs | Latest runs |
-| :------- | :--------------- | :---------- |
-| [npm install](.github/workflows/npm-install.yml) | `express`, `@aws-sdk/client-s3` | [Actions](https://github.com/coldstep-io/coldstep-demo/actions/workflows/npm-install.yml) |
-| [pip install](.github/workflows/pip-install.yml) | `pandas`, `numpy`, `scikit-learn`, `matplotlib` | [Actions](https://github.com/coldstep-io/coldstep-demo/actions/workflows/pip-install.yml) |
-| [cargo install](.github/workflows/cargo-install.yml) | `ripgrep` | [Actions](https://github.com/coldstep-io/coldstep-demo/actions/workflows/cargo-install.yml) |
-| [go install](.github/workflows/go-install.yml) | `golang.org/x/tools/gopls@latest` | [Actions](https://github.com/coldstep-io/coldstep-demo/actions/workflows/go-install.yml) |
-| [apt-get install](.github/workflows/apt-install.yml) | `ffmpeg` | [Actions](https://github.com/coldstep-io/coldstep-demo/actions/workflows/apt-install.yml) |
-| [gem install](.github/workflows/gem-install.yml) | `jekyll` | [Actions](https://github.com/coldstep-io/coldstep-demo/actions/workflows/gem-install.yml) |
-| [defend mode — npm allowlisted](.github/workflows/defend-npm.yml) | `express` (with allowlist enforced) | [Actions](https://github.com/coldstep-io/coldstep-demo/actions/workflows/defend-npm.yml) |
-
-All scheduled workflows run weekly (Monday mornings, UTC) so the picture stays current as the ecosystems shift. Each one is also `workflow_dispatch`-able from the Actions tab.
-
-## What the digest looks like
-
-> See the latest run in the [Actions tab](https://github.com/coldstep-io/coldstep-demo/actions) — every run posts its full digest to the Step Summary.
-
-A typical detect-mode digest contains:
-
-- **Processes:** every `exec()` chain the install triggered (npm → node → `node-gyp` → `cc1` → linker, etc.).
-- **IPv4 egress:** every destination contacted, grouped by domain (with rDNS), with byte counts.
-- **DNS:** every name resolved, with answer IPs.
-- **TLS SNI / HTTP host headers:** which logical hosts were addressed inside the TLS sessions.
-- **BPF program health:** load status of each probe, telling you the digest isn't blind.
-
-## Interpreting results
-
-**For detect mode:** Look at the Step Summary to see:
-- The process tree and egress destinations for that install
-- **Suggested allowlist** block — copy/paste those lines into `allow:` to lock down the same install in defend mode
-- Download the per-run artifact (under **Artifacts** in the run details) to get raw `.jsonl` events, the full `.md` digest, and telemetry for offline analysis
-
-**For defend mode:** The Step Summary's "Defend mode showcase" block reports the install outcome — `failure` means defend blocked a connection outside the allowlist (the expected showcase), `success` means everything the install touched was allowed. Either way, the `deny` events (if any) are in the artifact's `.coldstep-events.jsonl`.
+> Needs Docker + a Linux kernel with BTF + eBPF. Native Linux works directly; Docker Desktop
+> (macOS/Windows) and WSL2 ship a BTF-enabled kernel, so it works there too.
 
 ## detect vs defend
 
-**`mode: detect`** (default) — observe-only. The agent records everything; nothing is blocked. Use this to *discover* what a build actually contacts before you write an allowlist.
+**`mode: detect`** (default) — observe-only. The agent records everything; nothing is blocked.
+Use it to *discover* what a build actually contacts before you write an allowlist. Every detect
+digest ends with a **suggested allowlist** you can copy straight into defend mode.
 
-**`mode: defend`** — IPv4 egress not on the allowlist is blocked at the cgroup `connect4`/`sendmsg4` hook (plus BPF LSM where available). Use this once you know what the build legitimately needs. See [`defend-npm.yml`](.github/workflows/defend-npm.yml) for a minimal example that allows only the npm registry.
+**`mode: defend`** — IPv4 egress not on the allowlist is dropped at the cgroup
+`connect4`/`sendmsg4` hook (plus BPF LSM where available). The
+[defend demo](.github/workflows/defend-npm.yml) allows only the npm registry, proves a normal
+`npm install express` still succeeds, then watches an unauthorized connection to `1.1.1.1` get
+dropped before it leaves the runner — the job goes **green because the block worked**.
+
+## The workflows
+
+| Workflow | Installs | Committed digest | Live |
+| :------- | :------- | :--------------- | :--- |
+| [npm](.github/workflows/npm-install.yml) | `express`, `@aws-sdk/client-s3` | [npm.md](demo-output/v0.4.1/npm.md) | [Actions](https://github.com/coldstep-io/coldstep-demo/actions/workflows/npm-install.yml) |
+| [pip](.github/workflows/pip-install.yml) | `pandas`, `numpy`, `scikit-learn`, `matplotlib` | [pip.md](demo-output/v0.4.1/pip.md) | [Actions](https://github.com/coldstep-io/coldstep-demo/actions/workflows/pip-install.yml) |
+| [cargo](.github/workflows/cargo-install.yml) | `ripgrep` | [cargo.md](demo-output/v0.4.1/cargo.md) | [Actions](https://github.com/coldstep-io/coldstep-demo/actions/workflows/cargo-install.yml) |
+| [go](.github/workflows/go-install.yml) | `gopls@latest` | [go.md](demo-output/v0.4.1/go.md) | [Actions](https://github.com/coldstep-io/coldstep-demo/actions/workflows/go-install.yml) |
+| [apt](.github/workflows/apt-install.yml) | `ffmpeg` | [apt.md](demo-output/v0.4.1/apt.md) | [Actions](https://github.com/coldstep-io/coldstep-demo/actions/workflows/apt-install.yml) |
+| [gem](.github/workflows/gem-install.yml) | `jekyll` | [gem.md](demo-output/v0.4.1/gem.md) | [Actions](https://github.com/coldstep-io/coldstep-demo/actions/workflows/gem-install.yml) |
+| [defend (npm)](.github/workflows/defend-npm.yml) | `express`, allowlist enforced | [defend-npm.md](demo-output/v0.4.1/defend-npm.md) | [Actions](https://github.com/coldstep-io/coldstep-demo/actions/workflows/defend-npm.yml) |
+
+All scheduled workflows run weekly (Monday mornings, UTC) so the picture stays current as the
+ecosystems shift. Each is also `workflow_dispatch`-able from the Actions tab.
+
+## Reading a digest
+
+- **Processes:** every `exec()` chain the install triggered (npm → node → `node-gyp` → `cc1` → linker, …).
+- **IPv4 egress:** every destination contacted, with the process that reached it and a byte/event count.
+- **TLS SNI / HTTP host:** which logical hosts were addressed inside the TLS sessions.
+- **BPF program health:** load status of each probe, so you know the digest isn't blind.
+- **Suggested allowlist:** copy/paste those lines into `allow:` to lock the same install down in defend mode.
+
+For defend runs, the `deny` events (the dropped destinations) are in the run artifact's
+`.coldstep-events.jsonl`.
 
 ## Adapt these demos for your own repo
 
-Each workflow file is a standalone template — open one matching your package manager, copy it whole, and swap in your own install command. The minimal shape:
+Each workflow file is a standalone template — open the one matching your package manager, copy
+it whole, and swap in your own install command. The minimal shape:
 
 ```yaml
 - uses: coldstep-io/coldstep@v0.4.1
@@ -81,8 +105,10 @@ Each workflow file is a standalone template — open one matching your package m
   run: <your install/build command>
 ```
 
-Every demo also echoes the action's `suggested-allow` output into the Job Summary and uploads the raw telemetry files as artifacts — copy those steps verbatim from any [workflow file](.github/workflows).
+Every demo also echoes the action's `suggested-allow` output into the Job Summary and uploads
+the raw telemetry as artifacts — copy those steps verbatim from any
+[workflow file](.github/workflows). Once you know what the install legitimately contacts, switch
+to `mode: defend` and paste the suggested allowlist into the `allow:` input.
 
-Once you know what the install legitimately contacts, switch to `mode: defend` and paste the suggested allowlist into the `allow:` input. See [`defend-npm.yml`](.github/workflows/defend-npm.yml) for an example.
-
-**Reference:** Full input reference, defend-mode setup, IPv4 scope and limits, and the agent architecture are documented at **[coldstep-io/coldstep](https://github.com/coldstep-io/coldstep)**.
+**Reference:** Full input reference, defend-mode setup, IPv4 scope and limits, and the agent
+architecture live at **[coldstep-io/coldstep](https://github.com/coldstep-io/coldstep)**.
