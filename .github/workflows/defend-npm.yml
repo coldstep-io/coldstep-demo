@@ -2,6 +2,15 @@ name: "Demo: defend mode — npm allowlisted"
 on:
   workflow_dispatch:
 
+# This workflow goes GREEN when defend mode correctly blocks an unauthorized
+# connection. It demonstrates both halves of defend mode in one run:
+#   1. A legitimate `npm install express` over the allowlisted registry SUCCEEDS
+#      — defend does not get in the way of traffic you approved.
+#   2. An explicitly unauthorized egress (to a host NOT on the allowlist) is
+#      DROPPED at the cgroup connect4 hook — and the job asserts that it was.
+# A red ❌ here means defend FAILED to block the unauthorized egress (a real
+# regression), not that "the block worked".
+
 jobs:
   defend-demo:
     runs-on: ubuntu-latest
@@ -22,42 +31,88 @@ jobs:
           # action's node24 `pre:` hook fires at job setup, before any step.
           ignored-nets: 127.0.0.0/8
 
-      - name: Install express (allowlisted hosts only)
+      # (1) Legitimate, allowlisted traffic — expected to SUCCEED.
+      - name: Install express (allowlisted registry — should succeed)
         id: npm-install
         continue-on-error: true
         run: npm install express
 
-      - name: Report defend outcome
+      # (2) Unauthorized egress — defend is EXPECTED to drop this. 1.1.1.1 is a
+      # literal IP (no DNS needed) and is not on the allowlist, so the connect4
+      # hook drops the packet and curl fails. This is the deterministic block.
+      - name: Attempt unauthorized egress (defend must block this)
+        id: rogue-egress
+        continue-on-error: true
+        run: |
+          echo "Attempting connection to 1.1.1.1:443, which is NOT on the allowlist..."
+          curl -sS --max-time 15 https://1.1.1.1/ -o /dev/null
+
+      # (3) Green-on-block gate: the job passes iff defend dropped the
+      # unauthorized egress. It fails only if the rogue connection got through.
+      - name: Assert defend blocked the unauthorized egress
+        env:
+          ROGUE_OUTCOME: ${{ steps.rogue-egress.outcome }}
+          INSTALL_OUTCOME: ${{ steps.npm-install.outcome }}
+        run: |
+          echo "npm install (allowlisted) outcome: ${INSTALL_OUTCOME}"
+          echo "unauthorized egress outcome:       ${ROGUE_OUTCOME}"
+          if [ "${ROGUE_OUTCOME}" = "failure" ]; then
+            echo "✅ PASS — defend mode dropped the connection to 1.1.1.1 (not on the allowlist)."
+            exit 0
+          else
+            echo "❌ FAIL — the unauthorized egress to 1.1.1.1 was NOT blocked. Defend mode did not enforce the allowlist."
+            exit 1
+          fi
+
+      - name: Defend mode showcase (summary)
         if: always()
         env:
           INSTALL_OUTCOME: ${{ steps.npm-install.outcome }}
+          ROGUE_OUTCOME: ${{ steps.rogue-egress.outcome }}
         run: |
           {
             echo '## Defend mode showcase'
             echo ''
-            echo 'This workflow runs `npm install express` in **defend mode** with only `registry.npmjs.org` + `cdn.npmjs.com` allowed.'
-            echo 'In practice npm dials additional hosts (telemetry, mirror probes, transitively-fetched tarballs not under the allowed CDN), so the install is *expected to be blocked* somewhere — that is the showcase.'
+            echo 'Allowlist: `registry.npmjs.org`, `cdn.npmjs.com`. Loopback (`127.0.0.0/8`) ignored for the local DNS stub.'
             echo ''
-            echo "**npm install outcome:** \`${INSTALL_OUTCOME}\`"
-            echo ''
-            if [ "${INSTALL_OUTCOME}" = "failure" ]; then
-              echo 'PASS — defend mode blocked at least one connection that was not on the allowlist, exactly as designed.'
-              echo 'Inspect `.coldstep-events.jsonl` (uploaded as an artifact) for the `deny` events with the destinations that were dropped.'
-            elif [ "${INSTALL_OUTCOME}" = "success" ]; then
-              echo 'NOTE — npm install completed without being blocked. Either every host it touched was on the allowlist, or the version of npm in this runner image happens to talk only to the registry. Check `.coldstep-events.jsonl` to confirm no `deny` events were generated.'
+            echo '| step | what it tests | outcome | meaning |'
+            echo '| :--- | :------------ | :------ | :------ |'
+            if [ "${INSTALL_OUTCOME}" = "success" ]; then
+              echo "| \`npm install express\` | allowlisted traffic passes | \`success\` | ✅ defend does not break approved installs |"
             else
-              echo "NOTE — install step outcome was \`${INSTALL_OUTCOME}\`; see the step logs for context."
+              echo "| \`npm install express\` | allowlisted traffic passes | \`${INSTALL_OUTCOME}\` | ⚠️ see step logs |"
             fi
+            if [ "${ROGUE_OUTCOME}" = "failure" ]; then
+              echo "| \`curl 1.1.1.1\` | unauthorized egress | \`failure\` | ✅ **dropped at connect4 — this is the showcase** |"
+            else
+              echo "| \`curl 1.1.1.1\` | unauthorized egress | \`${ROGUE_OUTCOME}\` | ❌ NOT blocked — defend regression |"
+            fi
+            echo ''
+            echo 'A green check on this job means defend mode **enforced the allowlist**: the registry traffic express needed went through, and the unauthorized connection to `1.1.1.1` was dropped before it left the runner.'
+            echo ''
+            echo 'The `deny` events (with the dropped destinations) are in `.coldstep-events.jsonl`, uploaded as an artifact.'
           } >> "$GITHUB_STEP_SUMMARY"
+
+      # In defend mode the agent writes its telemetry as root with restrictive
+      # perms, so the upload step (running as the runner user) can't read it.
+      # Relax the perms so the artifact uploads.
+      - name: Make coldstep telemetry readable
+        if: always()
+        run: sudo chmod -R a+r .coldstep-* 2>/dev/null || true
 
       - name: Upload coldstep telemetry
         if: always()
+        # Telemetry is a nice-to-have; never let an artifact hiccup turn a
+        # correct defend run red. The green/red signal is the assert step above.
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: coldstep-${{ github.job }}-${{ github.run_id }}
+          # Glob every coldstep output regardless of mode-specific filenames.
           path: |
-            .coldstep-events.jsonl
-            .coldstep-detect.md
-            .coldstep-telemetry.json
+            .coldstep-*.jsonl
+            .coldstep-*.md
+            .coldstep-*.json
+          if-no-files-found: warn
           include-hidden-files: true
           retention-days: 14
