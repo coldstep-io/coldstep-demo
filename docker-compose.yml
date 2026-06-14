@@ -1,0 +1,34 @@
+# docker-compose.yml — the "I don't want to install act" path for run-demo.sh.
+#
+# Spins a privileged container that already has Docker CLI + act, mounts this
+# repo and the host Docker socket, and runs the demo workflow inside it:
+#
+#   docker compose run --rm coldstep-demo ./run-demo.sh npm detect
+#   docker compose run --rm coldstep-demo ./run-demo.sh npm defend
+#
+# `act` (inside the container) talks to the host Docker daemon over the mounted
+# socket and launches the real workflow runner as a sibling container. The
+# coldstep eBPF agent needs the host kernel's BTF + tracefs, which is why this
+# service is privileged and mounts /sys/kernel. Native Linux works directly;
+# Docker Desktop (macOS/Windows) and WSL2 expose a BTF-enabled kernel too.
+#
+# Prefer installing `act` on the host and just running `./run-demo.sh` — it's
+# lighter. This file is the zero-host-tooling fallback.
+
+services:
+  coldstep-demo:
+    # nektos/act ships a small image bundling act + the Docker CLI.
+    image: ghcr.io/nektos/act:latest
+    privileged: true
+    working_dir: /demo
+    environment:
+      # Tell run-demo.sh / act to reach the host daemon via the mounted socket.
+      DOCKER_HOST: unix:///var/run/docker.sock
+    volumes:
+      - .:/demo
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /sys/kernel/btf:/sys/kernel/btf:ro
+      - /sys/kernel/debug:/sys/kernel/debug:rw
+    entrypoint: ["/bin/sh", "-lc"]
+    # Default command prints usage; override with `... run-demo.sh npm detect`.
+    command: ["./run-demo.sh --help"]
