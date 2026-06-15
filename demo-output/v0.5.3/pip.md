@@ -1,10 +1,10 @@
 # coldstep detect digest — `pip`
 
-> **Faithful summary of real coldstep telemetry.** Extracted from the unmodified `.coldstep-events.jsonl` produced by [this run](https://github.com/coldstep-io/coldstep-demo/actions/runs/27513829354) (coldstep agent `v0.4.0`, action `@v0.4.1`, `mode: detect`, profile `enhanced`). coldstep posts the rendered digest to the GitHub **Step Summary**; this file summarizes the same events so you can read them here without opening Actions. The raw telemetry is the source of truth — linked at the bottom.
+> **Faithful summary of real coldstep telemetry.** Extracted from the unmodified `.coldstep-events.jsonl` produced by [this run](https://github.com/coldstep-io/coldstep-demo/actions/runs/27519463249) (coldstep agent `v0.5.3`, action `@v0.5.3`, `mode: detect`, profile `enhanced`). coldstep posts the rendered digest to the GitHub **Step Summary**; this file summarizes the same events so you can read them here without opening Actions. The raw telemetry is the source of truth — linked at the bottom.
 
 **Install command:** `pip install pandas numpy scikit-learn matplotlib`  
 **Kernel:** `6.17.0-1018-azure`  
-**Run:** [27513829354](https://github.com/coldstep-io/coldstep-demo/actions/runs/27513829354) · job `pip-demo` · sha `58dcafb`
+**Run:** [27519463249](https://github.com/coldstep-io/coldstep-demo/actions/runs/27519463249) · job `pip-demo` · sha `a7ecac0`
 
 ## BPF program health
 
@@ -27,9 +27,14 @@
 
 ## Processes
 
-71 fork events; 15 `exec()` calls captured. Binaries executed:
+101 fork events; 23 `exec()` calls captured. Binaries executed:
 
 - `node` → `/home/runner/actions-runner/cached/2.335.1/externals/node24/bin/node`
+- `networkctl` → `/usr/bin/networkctl`
+- `net-interface-h` → `/usr/lib/open-iscsi/net-interface-handler`
+- `chrony-onofflin` → `/usr/lib/networkd-dispatcher/off.d/chrony-onoffline`
+- `systemd-sysctl` → `/usr/lib/systemd/systemd-sysctl`
+- `chronyc` → `/usr/bin/chronyc`
 - `bash` → `/usr/bin/bash`
 - `pip` → `/usr/bin/pip`
 - `lsb_release` → `/usr/bin/lsb_release`
@@ -39,6 +44,8 @@
 - `uname` → `/usr/bin/uname`
 - `rustc` → `/home/runner/.cargo/bin/rustc`
 - `rustc` → `/home/runner/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/bin/rustc`
+- `9` → `/proc/self/fd/9`
+- `e2scrub_all` → `/sbin/e2scrub_all`
 - `node` → `/home/runner/actions-runner/cached/2.335.1/externals/node20/bin/node`
 
 ## IPv4 egress
@@ -47,14 +54,14 @@ Every distinct IPv4 destination the install touched (TCP connects + UDP datagram
 
 | destination | port(s) | by | policy | events |
 | :---------- | :------ | :- | :----- | -----: |
-| `168.63.129.16` | 53,80,32526 | python3, systemd-resolve | monitor | 38 |
-| `127.0.0.53` | 53 | node, pip, provjobd2072795 | monitor | 11 |
-| `127.0.0.1` | 32789,33548,33748,45340,48080 | systemd-resolve | monitor | 8 |
-| `151.101.128.223` | 443 | pip | monitor | 4 |
+| `168.63.129.16` | 53,80,32526 | python3, systemd-resolve | monitor | 48 |
+| `127.0.0.53` | 53 | hosted-compute-, node, pip | monitor | 11 |
+| `127.0.0.1` | 36007,39540,45714,50695,56098 | systemd-resolve | monitor | 8 |
+| `151.101.0.223` | 443 | pip | monitor | 4 |
 | `151.101.192.223` | 443 | pip | monitor | 2 |
+| `151.101.128.223` | 443 | pip | monitor | 2 |
 | `151.101.64.223` | 443 | pip | monitor | 2 |
-| `151.101.0.223` | 443 | pip | monitor | 2 |
-| `20.75.202.224` | 443 | provjobd2072795 | monitor | 1 |
+| `140.82.113.23` | 443 | hosted-compute- | monitor | 1 |
 | `140.82.113.22` | 443 | node | monitor | 1 |
 
 IPv6 destinations seen (not enforced in this profile): `2a04:4e42:200::223`, `2a04:4e42:400::223`, `2a04:4e42:600::223`, `2a04:4e42::223`
@@ -63,9 +70,9 @@ IPv6 destinations seen (not enforced in this profile): `2a04:4e42:200::223`, `2a
 
 | SNI host | resolved dst IP(s) | by | events |
 | :------- | :----------------- | :- | -----: |
-| `pypi.org` | `151.101.128.223` | pip | 1 |
-| `files.pythonhosted.org` | `151.101.128.223` | pip | 1 |
-| `hosted-compute-watchdog-prod-eus-02.githubapp.com` | `20.75.202.224` | provjobd2072795 | 1 |
+| `hosted-compute-request-orchestrator-prod-iad-01.githubapp.com` | `140.82.113.23` | hosted-compute- | 1 |
+| `pypi.org` | `151.101.0.223` | pip | 1 |
+| `files.pythonhosted.org` | `151.101.0.223` | pip | 1 |
 | `results-receiver.actions.githubusercontent.com` | `140.82.113.22` | node | 1 |
 
 ## HTTP host headers (cleartext)
@@ -79,4 +86,4 @@ IPv6 destinations seen (not enforced in this profile): `2a04:4e42:200::223`, `2a
 create: 5000
 
 ---
-_Raw telemetry: `.coldstep-events.jsonl` (5,258 events) is attached to the [run artifacts](https://github.com/coldstep-io/coldstep-demo/actions/runs/27513829354)._
+_Raw telemetry: `.coldstep-events.jsonl` (5,317 events) is attached to the [run artifacts](https://github.com/coldstep-io/coldstep-demo/actions/runs/27519463249)._

@@ -1,6 +1,6 @@
 # coldstep detect digest — `npm`
 
-> **Faithful summary of real coldstep telemetry.** Extracted from the unmodified `.coldstep-events.jsonl` produced by [this run](https://github.com/coldstep-io/coldstep-demo/actions/runs/27513828839) (coldstep agent `v0.4.0`, action `@v0.4.1`, `mode: detect`, profile `enhanced`). At v0.4.1 coldstep posts the rendered digest only to the GitHub **Step Summary**; this file summarizes the same events so you can read them here. v0.5.x writes a committable digest file directly — see `../v0.5.3/`.
+> **Faithful summary of real coldstep telemetry.** Extracted from the unmodified `.coldstep-events.jsonl` produced by [this run](https://github.com/coldstep-io/coldstep-demo/actions/runs/27513828839) (coldstep agent `v0.4.0`, action `@v0.4.1`, `mode: detect`, profile `enhanced`). coldstep posts the rendered digest to the GitHub **Step Summary**; this file summarizes the same events so you can read them here without opening Actions. The raw telemetry is the source of truth — linked at the bottom.
 
 **Install command:** `npm install express && npm install @aws-sdk/client-s3`  
 **Kernel:** `6.17.0-1018-azure`  
