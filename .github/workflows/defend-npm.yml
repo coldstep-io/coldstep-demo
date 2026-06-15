@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - id: coldstep
-        uses: coldstep-io/coldstep@v0.4.1
+        uses: coldstep-io/coldstep@v0.5.3
         with:
           mode: defend
           fail-on-error: true
