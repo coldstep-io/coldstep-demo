@@ -6,6 +6,12 @@ run. This script summarizes the same events coldstep renders into the GitHub
 Step Summary, so the committed .md is a stand-in readers can browse without
 opening Actions. It is intentionally a *summary*, not a byte-for-byte copy of
 coldstep's own renderer.
+
+Since coldstep v0.5.4 the action writes a native digest to .coldstep-<mode>.md
+(.coldstep-detect.md / .coldstep-defend.md) by default — coldstep's own faithful
+renderer. The demo-output/v0.5.4+/ digests are those native files committed
+verbatim; this extractor stays as the fallback for older runs (pre-v0.5.4 JSONL
+that carries no native digest).
 """
 import sys, json, collections
 
