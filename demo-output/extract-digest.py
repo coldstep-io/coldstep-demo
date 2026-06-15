@@ -9,7 +9,8 @@ coldstep's own renderer.
 """
 import sys, json, collections
 
-path, pm, run_url, install_desc = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+path, pm, run_url, install_desc, action_tag, out_path = (
+    sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6])
 
 meta = None
 execs = []
@@ -45,8 +46,9 @@ with open(path, encoding="utf-8") as fh:
                 e["policy"].add(o.get("policy", "?"))
                 e["count"] += 1
         elif t == "tcp6":
-            if o.get("dst"):
-                tcp6.add(o["dst"])
+            d = o.get("dst")
+            if d and ":" in d:  # only genuine IPv6 literals
+                tcp6.add(d)
         elif t == "tls":
             s = o.get("sni")
             if s:
@@ -78,11 +80,11 @@ w(f"# coldstep detect digest — `{pm}`")
 w()
 w(f"> **Faithful summary of real coldstep telemetry.** Extracted from the unmodified "
   f"`.coldstep-events.jsonl` produced by [this run]({run_url}) "
-  f"(coldstep agent `{(meta or {}).get('agent_version','?')}`, action `@v0.4.1`, "
+  f"(coldstep agent `{(meta or {}).get('agent_version','?')}`, action `{action_tag}`, "
   f"`mode: detect`, profile `{(meta or {}).get('detect_profile','?')}`). "
-  f"At v0.4.1 coldstep posts the rendered digest only to the GitHub **Step Summary**; "
-  f"this file summarizes the same events so you can read them here. "
-  f"v0.5.x writes a committable digest file directly — see `../v0.5.3/`.")
+  f"coldstep posts the rendered digest to the GitHub **Step Summary**; this file "
+  f"summarizes the same events so you can read them here without opening Actions. "
+  f"The raw telemetry is the source of truth — linked at the bottom.")
 w()
 w(f"**Install command:** `{install_desc}`  ")
 w(f"**Kernel:** `{(meta or {}).get('kernel_release','?')}`  ")
@@ -168,6 +170,6 @@ w("---")
 w(f"_Raw telemetry: `.coldstep-events.jsonl` ({total:,} events) is attached to "
   f"the [run artifacts]({run_url})._")
 
-with open(sys.argv[5], "w", encoding="utf-8") as fo:
+with open(out_path, "w", encoding="utf-8") as fo:
     fo.write("\n".join(out) + "\n")
-print(f"wrote {sys.argv[5]} ({len('\n'.join(out))} bytes)")
+print(f"wrote {out_path} ({len(chr(10).join(out))} bytes)")

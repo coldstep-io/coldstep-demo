@@ -1,10 +1,10 @@
 # coldstep detect digest — `apt`
 
-> **Faithful summary of real coldstep telemetry.** Extracted from the unmodified `.coldstep-events.jsonl` produced by [this run](https://github.com/coldstep-io/coldstep-demo/actions/runs/27513830914) (coldstep agent `v0.4.0`, action `@v0.4.1`, `mode: detect`, profile `enhanced`). coldstep posts the rendered digest to the GitHub **Step Summary**; this file summarizes the same events so you can read them here without opening Actions. The raw telemetry is the source of truth — linked at the bottom.
+> **Faithful summary of real coldstep telemetry.** Extracted from the unmodified `.coldstep-events.jsonl` produced by [this run](https://github.com/coldstep-io/coldstep-demo/actions/runs/27519465323) (coldstep agent `v0.5.3`, action `@v0.5.3`, `mode: detect`, profile `enhanced`). coldstep posts the rendered digest to the GitHub **Step Summary**; this file summarizes the same events so you can read them here without opening Actions. The raw telemetry is the source of truth — linked at the bottom.
 
 **Install command:** `apt-get install ffmpeg`  
 **Kernel:** `6.17.0-1018-azure`  
-**Run:** [27513830914](https://github.com/coldstep-io/coldstep-demo/actions/runs/27513830914) · job `apt-demo` · sha `58dcafb`
+**Run:** [27519465323](https://github.com/coldstep-io/coldstep-demo/actions/runs/27519465323) · job `apt-demo` · sha `a7ecac0`
 
 ## BPF program health
 
@@ -27,7 +27,7 @@
 
 ## Processes
 
-1459 fork events; 918 `exec()` calls captured. Binaries executed:
+1457 fork events; 918 `exec()` calls captured. Binaries executed:
 
 - `node` → `/home/runner/actions-runner/cached/2.335.1/externals/node24/bin/node`
 - `bash` → `/usr/bin/bash`
@@ -46,11 +46,11 @@
 - `gpgv` → `/usr/lib/apt/methods/gpgv`
 - `apt-key` → `/usr/bin/apt-key`
 - `apt-config` → `/usr/bin/apt-config`
-- `ubuntu-distro-i` → `/usr/bin/ubuntu-distro-info`
 - `gpgv` → `/usr/bin/gpgv`
 - `mktemp` → `/usr/bin/mktemp`
 - `chmod` → `/usr/bin/chmod`
 - `sed` → `/usr/bin/sed`
+- `ubuntu-distro-i` → `/usr/bin/ubuntu-distro-info`
 - `gpgconf` → `/usr/bin/gpgconf`
 - `gpg-connect-age` → `/usr/bin/gpg-connect-agent`
 - `rm` → `/usr/bin/rm`
@@ -109,38 +109,41 @@ Every distinct IPv4 destination the install touched (TCP connects + UDP datagram
 
 | destination | port(s) | by | policy | events |
 | :---------- | :------ | :- | :----- | -----: |
-| `168.63.129.16` | 53,80,32526 | python3, systemd-resolve | monitor | 67 |
-| `127.0.0.53` | 53 | hosted-compute-, http, https, node, provjobd3490303 | monitor | 37 |
-| `127.0.0.1` | 33618,33776,36396,36751,37185,38361,39726,41453,43048,43334,49308,49757,50970,51158,51744,59103,60065 | systemd-resolve | monitor | 24 |
-| `13.107.246.66` | 443 | https | monitor | 9 |
-| `91.189.91.46` | 443 | https | monitor | 8 |
-| `192.178.142.91` | 443 | https | monitor | 7 |
+| `168.63.129.16` | 53,80,32526 | python3, systemd-resolve | monitor | 57 |
+| `127.0.0.53` | 53 | .NET TP Worker, hosted-compute-, http, https, node | monitor | 38 |
+| `127.0.0.1` | 32785,34186,40900,45320,45812,51367,51483,51492,51700,56224,56929,57243,57602,58197,60539,60760 | systemd-resolve | monitor | 24 |
+| `13.107.246.40` | 443 | https | monitor | 9 |
+| `185.125.190.75` | 443 | https | monitor | 8 |
+| `172.253.62.91` | 443 | https | monitor | 7 |
 | `34.245.102.249` | 443 | https | monitor | 5 |
-| `52.161.185.214` | 80 | http | monitor | 2 |
-| `20.75.202.224` | 443 | hosted-compute-, provjobd3490303 | monitor | 2 |
-| `13.107.213.66` | 443 | https | monitor | 1 |
-| `192.178.142.136` | 443 | https | monitor | 1 |
-| `192.178.142.93` | 443 | https | monitor | 1 |
-| `192.178.142.190` | 443 | https | monitor | 1 |
+| `52.147.219.192` | 80 | http | monitor | 2 |
+| `20.209.226.129` | 0 | .NET TP Worker | monitor | 1 |
+| `20.209.226.1` | 0 | .NET TP Worker | monitor | 1 |
+| `20.209.227.33` | 0 | .NET TP Worker | monitor | 1 |
+| `172.253.62.136` | 443 | https | monitor | 1 |
+| `13.107.213.40` | 443 | https | monitor | 1 |
+| `172.253.62.190` | 443 | https | monitor | 1 |
+| `172.253.62.93` | 443 | https | monitor | 1 |
 | `34.253.181.30` | 443 | https | monitor | 1 |
+| `54.154.251.197` | 443 | https | monitor | 1 |
 | `34.244.58.147` | 443 | https | monitor | 1 |
 | `3.254.173.149` | 443 | https | monitor | 1 |
-| `54.154.251.197` | 443 | https | monitor | 1 |
+| `91.189.91.46` | 443 | https | monitor | 1 |
 | `185.125.190.23` | 443 | https | monitor | 1 |
-| `91.189.91.47` | 443 | https | monitor | 1 |
 | `185.125.190.24` | 443 | https | monitor | 1 |
-| `185.125.190.75` | 443 | https | monitor | 1 |
-| `140.82.112.21` | 443 | node | monitor | 1 |
+| `91.189.91.47` | 443 | https | monitor | 1 |
+| `140.82.113.23` | 443 | hosted-compute- | monitor | 1 |
+| `140.82.113.21` | 443 | node | monitor | 1 |
 
-IPv6 destinations seen (not enforced in this profile): `2001:67c:1562::21`, `2001:67c:1562::22`, `2607:f8b0:4023:80d::5b`, `2607:f8b0:4023:80d::5d`, `2607:f8b0:4023:80d::88`, `2607:f8b0:4023:80d::be`, `2620:1ec:46::66`, `2620:1ec:bdf::66`, `2620:2d:4000:1::2e`, `2620:2d:4000:1::2f`, `2620:2d:4000:1::30`, `2a05:d018:91c:3200:2846:99fb:81b6:1e11`, `2a05:d018:91c:3200:5e0d:21a9:26ca:90b5`, `2a05:d018:91c:3200:c887:2f22:290f:a7c`, `2a05:d018:91c:3200:c8f:1a06:a2dd:450f`, `2a05:d018:91c:3200:d8b6:37bc:63f9:703c`
+IPv6 destinations seen (not enforced in this profile): `2001:67c:1562::21`, `2001:67c:1562::22`, `2607:f8b0:4004:c23::5b`, `2607:f8b0:4004:c23::5d`, `2607:f8b0:4004:c23::88`, `2607:f8b0:4004:c23::be`, `2620:1ec:46::40`, `2620:1ec:bdf::40`, `2620:2d:4000:1::2e`, `2620:2d:4000:1::2f`, `2620:2d:4000:1::30`, `2a05:d018:91c:3200:2846:99fb:81b6:1e11`, `2a05:d018:91c:3200:5e0d:21a9:26ca:90b5`, `2a05:d018:91c:3200:c887:2f22:290f:a7c`, `2a05:d018:91c:3200:c8f:1a06:a2dd:450f`, `2a05:d018:91c:3200:d8b6:37bc:63f9:703c`
 
 ## TLS SNI (logical hosts inside TLS)
 
 | SNI host | resolved dst IP(s) | by | events |
 | :------- | :----------------- | :- | -----: |
-| `hosted-compute-request-orchestrator-prod-eus-01.githubapp.com` | `20.75.202.224` | hosted-compute- | 1 |
-| `hosted-compute-watchdog-prod-eus-01.githubapp.com` | `20.75.202.224` | provjobd3490303 | 1 |
-| `results-receiver.actions.githubusercontent.com` | `140.82.112.21` | node | 1 |
+| `productionresultssa0.blob.core.windows.net` | `20.209.226.129` | .NET TP Worker | 1 |
+| `hosted-compute-request-orchestrator-prod-iad-02.githubapp.com` | `140.82.113.23` | hosted-compute- | 1 |
+| `results-receiver.actions.githubusercontent.com` | `140.82.113.21` | node | 1 |
 
 ## HTTP host headers (cleartext)
 
@@ -154,4 +157,4 @@ IPv6 destinations seen (not enforced in this profile): `2001:67c:1562::21`, `200
 create: 5000
 
 ---
-_Raw telemetry: `.coldstep-events.jsonl` (7,895 events) is attached to the [run artifacts](https://github.com/coldstep-io/coldstep-demo/actions/runs/27513830914)._
+_Raw telemetry: `.coldstep-events.jsonl` (7,852 events) is attached to the [run artifacts](https://github.com/coldstep-io/coldstep-demo/actions/runs/27519465323)._
