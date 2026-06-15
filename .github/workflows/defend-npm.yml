@@ -23,13 +23,11 @@ jobs:
           allow: |
             registry.npmjs.org
             cdn.npmjs.com
-          # Allow loopback so npm's getaddrinfo() can reach the systemd-resolved
-          # stub at 127.0.0.53:53. Without this, defend's cgroup connect4 hook
-          # blocks the local DNS call and npm fails with EAI_AGAIN. The stub
-          # itself runs outside the job cgroup, so its upstream queries are
-          # unaffected. A pre-step pre-resolve does NOT work here because the
-          # action's node24 `pre:` hook fires at job setup, before any step.
-          ignored-nets: 127.0.0.0/8
+          # No loopback entry needed: coldstep always bypasses IPv4 loopback
+          # (127.0.0.0/8) in defend mode, so npm's getaddrinfo() reaches the
+          # systemd-resolved stub at 127.0.0.53:53 and DNS keeps working. (The
+          # old `ignored-nets` input was removed upstream; loopback is implicit
+          # now — add `!CIDR` entries to `allow` for any other ignores.)
 
       # (1) Legitimate, allowlisted traffic — expected to SUCCEED.
       - name: Install express (allowlisted registry — should succeed)
