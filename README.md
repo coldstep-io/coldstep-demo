@@ -29,7 +29,7 @@ No "see the Actions tab", no expiring artifacts, no 404s. The actual output is i
 Each digest links back to the exact run that produced it. There's an asciinema replay too:
 [`demo-output/casts/`](demo-output/casts/) (`asciinema play demo-output/casts/npm-detect-vs-defend.cast`).
 
-> Pinned to [`coldstep-io/coldstep@v0.4.1`](https://github.com/coldstep-io/coldstep/releases/tag/v0.4.1).
+> Pinned to [`coldstep-io/coldstep@v0.5.3`](https://github.com/coldstep-io/coldstep/releases/tag/v0.5.3).
 > The digests above are summarized from each run's raw `.coldstep-events.jsonl` — see
 > [demo-output/README.md](demo-output/README.md) for exactly how, and why.
 
@@ -95,7 +95,7 @@ Each workflow file is a standalone template — open the one matching your packa
 it whole, and swap in your own install command. The minimal shape:
 
 ```yaml
-- uses: coldstep-io/coldstep@v0.4.1
+- uses: coldstep-io/coldstep@v0.5.3
   with:
     mode: detect
     detect-profile: enhanced
