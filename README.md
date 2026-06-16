@@ -31,7 +31,7 @@ Each digest links back to the exact run that produced it. There's an asciinema r
 Earlier captures against `@v0.4.1` are kept under [`demo-output/v0.4.1/`](demo-output/v0.4.1/)
 for comparison.
 
-> Pinned to [`coldstep-io/coldstep@v0.6.0`](https://github.com/coldstep-io/coldstep/releases/tag/v0.6.0).
+> Pinned to [`coldstep-io/coldstep@v0.6.1`](https://github.com/coldstep-io/coldstep/releases/tag/v0.6.1).
 > Since v0.5.4 the action writes a native digest to `.coldstep-<mode>.md` by default, so the
 > `demo-output/v0.5.4/` digests are coldstep's own renderer output committed verbatim. Earlier
 > captures (`v0.4.1`, `v0.5.3`) are summarized from each run's raw `.coldstep-events.jsonl` via
@@ -102,7 +102,7 @@ Each workflow file is a standalone template — open the one matching your packa
 it whole, and swap in your own install command. The minimal shape:
 
 ```yaml
-- uses: coldstep-io/coldstep@v0.6.0
+- uses: coldstep-io/coldstep@v0.6.1
   with:
     mode: detect
     detect-profile: enhanced
