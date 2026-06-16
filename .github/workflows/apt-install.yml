@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - id: coldstep
-        uses: coldstep-io/coldstep@v0.5.4
+        uses: coldstep-io/coldstep@v0.6.1
         with:
           mode: detect
           detect-profile: enhanced
